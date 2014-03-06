@@ -1,0 +1,20 @@
+#include "passes.h"
+#include "llvm/IR/Function.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/IR/Constants.h"
+
+namespace cs565 {
+	bool PrettyPrint::runOnFunction(Function &F) {
+		errs() << "FUNCTION ";
+		errs().write_escaped(F.getName()) << "\n\n";
+		
+		return false;
+	}
+	
+	void PrettyPrint::getAnalysisUsage(AnalysisUsage &Info) const {
+		Info.setPreservesAll();
+	}
+}
+
+char cs565::PrettyPrint::ID = 0;
+static RegisterPass<cs565::PrettyPrint> X("prettyPrint", "(CS 565) - Pretty Print LLVM IR", false, false);
