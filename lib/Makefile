@@ -14,9 +14,21 @@ LOADABLE_MODULE = 1
 LIB_EXT = .dylib
 
 TEST_PRINT = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -prettyPrint <
+TEST_NAIVE = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -cfgNaive < 
 
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
 
 testPrint:
 	$(TEST_PRINT) ../tests/test1.bc > /dev/null
+
+testPrint2:
+	$(TEST_PRINT) ../tests/test2.bc > /dev/null
+
+testPrint3:
+	$(TEST_PRINT) ../tests/test3.bc > /dev/null
+
+testNaive: 
+	@$(TEST_PRINT) ../tests/test2.bc > /dev/null
+	@$(TEST_NAIVE) ../tests/test2.bc > ../tests/test2.opt.bc
+	@$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null

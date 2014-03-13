@@ -12,4 +12,10 @@ namespace cs565 {
 		
 		virtual void getAnalysisUsage(AnalysisUsage &Info) const;
 	};
+    struct CFGNaive : public FunctionPass {
+		static char ID;
+		CFGNaive() : FunctionPass(ID) {}
+		
+		virtual bool runOnFunction(Function &F);
+	};
 }

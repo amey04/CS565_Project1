@@ -12,6 +12,7 @@
 		92E3DB2B1889E2A1005908F6 /* test2.c in Sources */ = {isa = PBXBuildFile; fileRef = 92E3D8C61889E012005908F6 /* test2.c */; };
 		92E3DB2C1889E2A1005908F6 /* test3.c in Sources */ = {isa = PBXBuildFile; fileRef = 92E3D8CB1889E012005908F6 /* test3.c */; };
 		92E3DB2E1889E2A1005908F6 /* prettyPrint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92E3D8BC1889E012005908F6 /* prettyPrint.cpp */; };
+		9D64B40F18CD9A6700126701 /* cfgNaive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9D64B40D18CD9A6700126701 /* cfgNaive.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		92E3D8C61889E012005908F6 /* test2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test2.c; sourceTree = "<group>"; };
 		92E3D8CB1889E012005908F6 /* test3.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test3.c; sourceTree = "<group>"; };
 		92E3DB251889E0D7005908F6 /* libblah.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libblah.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D64B40D18CD9A6700126701 /* cfgNaive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cfgNaive.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 				92E3D8BB1889E012005908F6 /* Makefile */,
 				922D316F188B445B002604DB /* passes.h */,
 				92E3D8BC1889E012005908F6 /* prettyPrint.cpp */,
+				9D64B40D18CD9A6700126701 /* cfgNaive.cpp */,
 			);
 			path = lib;
 			sourceTree = "<group>";
@@ -138,6 +141,7 @@
 				92E3DB2A1889E2A1005908F6 /* test1.c in Sources */,
 				92E3DB2B1889E2A1005908F6 /* test2.c in Sources */,
 				92E3DB2C1889E2A1005908F6 /* test3.c in Sources */,
+				9D64B40F18CD9A6700126701 /* cfgNaive.cpp in Sources */,
 				92E3DB2E1889E2A1005908F6 /* prettyPrint.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

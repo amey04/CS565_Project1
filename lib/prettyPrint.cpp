@@ -7,7 +7,7 @@
 
 namespace cs565 {
 	bool PrettyPrint::runOnFunction(Function &F) {
-        int instNo=1, symNo=1;
+        int instNo=1;
         std::map<std::string, int> symTable;
         std::map<Instruction *, int> instTable;
         
@@ -28,7 +28,7 @@ namespace cs565 {
                     //Check if operand is instruction operand
                     std::map<Instruction*,int>::iterator it;
                     
-                    if((it=instTable.find((Instruction*)instItor->getOperand(j))) != instTable.end())
+                    if((it=instTable.find(reinterpret_cast<Instruction*>(instItor->getOperand(j)))	) != instTable.end())
                     {
                         errs() << "%" << it->second << " ";
                     }
