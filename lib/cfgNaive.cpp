@@ -6,68 +6,57 @@
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallPtrSet.h"
 
+#define MAX_BLOCKS 15
+
 namespace cs565 {
 	bool CFGNaive::runOnFunction(Function &F) {
-        /*GraphTraits<BasicBlock> *gt;
-        df_ext_iterator<BasicBlock> *it;
-        
-        for (Function::iterator blockItor = F.begin() ;  blockItor != F.end(); ++blockItor)
-        {
-            for (BasicBlock::iterator instItor = blockItor->begin() ; instItor != blockItor->end() ; ++instItor)
-            {
-            }
-        }*/
 
-        //for each function iterating over the basic blocks
-       /* for (Function::iterator blockItor = F.begin() ;  blockItor != F.end(); ++blockItor)
-        {
-            BasicBlock* BB = dyn_cast<BasicBlock>(&*blockItor);
-            //for(idf_iterator<BasicBlock*> I=idf_begin(BB); I!=idf_end(BB);
-                 //++I)
-            for (df_ext_iterator<BasicBlock*> dfs = df_ext_begin(BB, <#SetTy &S#>); <#condition#>; <#increment#>) {
-                <#statements#>
-            }
-            {   // for each basic block walking over the predecessors in the graph
-                BasicBlock* B = *I;
-            }
-        }
+        SmallPtrSet<BasicBlock*, MAX_BLOCKS> Reachable;
         
-		return false;*/
+        // Mark all reachable blocks using dfs iterator
+        for (df_ext_iterator<Function*, SmallPtrSet<BasicBlock*, MAX_BLOCKS> > dfsItor =
+             df_ext_begin(&F, Reachable); dfsItor != df_ext_end(&F, Reachable); ++dfsItor);
         
-        SmallPtrSet<BasicBlock*, 8> Reachable;
+        std::vector<BasicBlock*> unreachableBlocks;
         
-        // Mark all reachable blocks.
-        for (df_ext_iterator<Function*, SmallPtrSet<BasicBlock*, 8> > I =
-             df_ext_begin(&F, Reachable), E = df_ext_end(&F, Reachable); I != E; ++I)
-        /* Mark all reachable blocks */;
-        
-        // Loop over all dead blocks, remembering them and deleting all instructions
-        // in them.
-        std::vector<BasicBlock*> DeadBlocks;
-        for (Function::iterator I = F.begin(), E = F.end(); I != E; ++I)
-            if (!Reachable.count(I)) {
-                BasicBlock *BB = I;
-                DeadBlocks.push_back(BB);
-                /*while (PHINode *PN = dyn_cast<PHINode>(BB->begin())) {
-                    PN->replaceAllUsesWith(Constant::getNullValue(PN->getType()));
-                    BB->getInstList().pop_front();
-                }*/
-                for (succ_iterator SI = succ_begin(BB), E = succ_end(BB); SI != E; ++SI)
-                    (*SI)->removePredecessor(BB);
+        for (Function::iterator blockItor = F.begin(); blockItor != F.end(); ++blockItor) {
+            // check if block is reachable or not
+            if (!Reachable.count(blockItor)) {
+                BasicBlock *BB = blockItor;
+                unreachableBlocks.push_back(BB);
+                
+                /**
+                 * Note basic blocks which are not visited in DFS traversal above are not
+                 * directly removed from CFG as first we need to drop all references to 
+                 * those blocks. Hence a separate list of unreachable blocks is created in this loop
+                 **/
+                
+                // Remove this BasicBlock from Predecessor list of all its successors
+                for (succ_iterator succItor = succ_begin(BB); succItor != succ_end(BB); ++succItor) {
+                    (*succItor)->removePredecessor(BB);
+                }
+                // Drop all references to this BasicBlock
                 BB->dropAllReferences();
             }
+        }
         
-        // Actually remove the blocks now.
+        // Actually remove the unreachable blocks.
         errs() << "\n";
-        for (int i = 0, e = (int)DeadBlocks.size(); i != e; ++i) {
-            errs() << DeadBlocks[i]->getName() << " is unreachable\n";
-            DeadBlocks[i]->eraseFromParent();
+        for (int i = 0; i != (int)unreachableBlocks.size(); ++i) {
+            errs() << unreachableBlocks[i]->getName() << " is unreachable\n";
+            unreachableBlocks[i]->eraseFromParent();
         }
         errs() << "\n";
-        return DeadBlocks.size();
+        
+        // check if we modified the grammar
+        if (unreachableBlocks.size() == 0) {
+            return false; // No modifications made
+        }
+        return true; // modifications made
 	}
 }
 
 char cs565::CFGNaive::ID = 1;
 static RegisterPass<cs565::CFGNaive> X("cfgNaive", "(CS 565) -Naive Unreachable Basic Blocks Removal: LLVM IR", false, false);
+
 

@@ -8,7 +8,6 @@
 namespace cs565 {
 	bool PrettyPrint::runOnFunction(Function &F) {
         int instNo=1;
-        std::map<std::string, int> symTable;
         std::map<Instruction *, int> instTable;
         
 		errs() << "FUNCTION ";
@@ -28,23 +27,13 @@ namespace cs565 {
                     //Check if operand is instruction operand
                     std::map<Instruction*,int>::iterator it;
                     
-                    if((it=instTable.find(reinterpret_cast<Instruction*>(instItor->getOperand(j)))	) != instTable.end())
+                    if((it=instTable.find(reinterpret_cast<Instruction*>(instItor->getOperand(j)))) != instTable.end())
                     {
                         errs() << "%" << it->second << " ";
                     }
                     
                     //check if operand is named operand
                     else if(instItor->getOperand(j)->hasName())
-                    /*{
-                     std::map<std::string, int>::iterator it;
-                     if((it=symTable.find(instItor->getOperand(j)->getName().str())) == symTable.end()) {
-                     symTable.insert(make_pair(instItor->getOperand(j)->getName().str(), symNo));
-                     errs() << "%" << symNo++ << " sym";
-                     }
-                     else {
-                     errs() << "%" << it->second << " sym";
-                     }
-                     }*/
                     {
                         errs() << instItor->getOperand(j)->getName() << " ";
                     }
@@ -54,7 +43,8 @@ namespace cs565 {
                         ConstantInt *i = dyn_cast<ConstantInt>(instItor->getOperand(j));
                         if(i)
                             errs() << i->getValue() << " ";
-                        //i->print(errs());
+                        else
+                            errs() << "XXX ";
                     }
                 }
                 

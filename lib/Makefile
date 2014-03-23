@@ -29,6 +29,11 @@ testPrint3:
 	$(TEST_PRINT) ../tests/test3.bc > /dev/null
 
 testNaive: 
-	@$(TEST_PRINT) ../tests/test2.bc > /dev/null
-	@$(TEST_NAIVE) ../tests/test2.bc > ../tests/test2.opt.bc
-	@$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
+	$(TEST_PRINT) ../tests/test2.bc > /dev/null
+	$(TEST_NAIVE) ../tests/test2.bc > ../tests/test2.opt.bc
+	$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
+
+testNaive4: 
+	@$(TEST_PRINT) ../tests/test4.bc > /dev/null
+	@$(TEST_NAIVE) ../tests/test4.bc > ../tests/test4.opt.bc
+	@$(TEST_PRINT) ../tests/test4.opt.bc > /dev/null
