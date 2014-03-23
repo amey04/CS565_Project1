@@ -40,6 +40,7 @@ namespace cs565 {
                     //check if operand is unnamed operand
                     else
                     {
+                        // check for const int
                         ConstantInt *i = dyn_cast<ConstantInt>(instItor->getOperand(j));
                         if(i)
                             errs() << i->getValue() << " ";
@@ -47,15 +48,7 @@ namespace cs565 {
                             errs() << "XXX ";
                     }
                 }
-                
-                /*for (User::op_iterator i = instItor->op_begin(); i != instItor->op_end(); ++i) {
-                 Value *v = *i;
-                 errs() << " " << v->getName() << " " << v->getValueName()<< " ";
-                 }
-                 for (Value::use_iterator i = instItor->use_begin(); i != instItor->use_end(); ++i) {
-                 //Value *v = *i;
-                 errs() << *i << " ";
-                 }*/
+
                 errs() << "\n";
             }
         }

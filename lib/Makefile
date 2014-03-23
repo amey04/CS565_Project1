@@ -22,11 +22,9 @@ include $(LEVEL)/Makefile.common
 testPrint:
 	$(TEST_PRINT) ../tests/test1.bc > /dev/null
 
-testPrint2:
-	$(TEST_PRINT) ../tests/test2.bc > /dev/null
+testDead:
+	$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
 
-testPrint3:
-	$(TEST_PRINT) ../tests/test3.bc > /dev/null
 
 testNaive: 
 	$(TEST_PRINT) ../tests/test2.bc > /dev/null
@@ -37,3 +35,6 @@ testNaive4:
 	@$(TEST_PRINT) ../tests/test4.bc > /dev/null
 	@$(TEST_NAIVE) ../tests/test4.bc > ../tests/test4.opt.bc
 	@$(TEST_PRINT) ../tests/test4.opt.bc > /dev/null
+
+tar:
+	tar cvf Project1_LLvm.tar Makefile *.cpp *.h
