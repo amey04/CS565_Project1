@@ -10,36 +10,30 @@ namespace cs565 {
         int instNo=1;
         std::map<Instruction *, int> instTable;
         
-		errs() << "FUNCTION ";
-		errs().write_escaped(F.getName()) << "\n\n";
+		errs() << "\nFUNCTION ";
+		errs().write_escaped(F.getName()) << "\n";
         
-        for (Function::iterator blockItor = F.begin() ;  blockItor != F.end(); ++blockItor)
-        {
+        for (Function::iterator blockItor = F.begin() ;  blockItor != F.end(); ++blockItor) {
             errs() << "\nBASIC BLOCK " << blockItor->getName() << "\n";
-            for (BasicBlock::iterator instItor = blockItor->begin() ; instItor != blockItor->end() ; ++instItor)
-            {
+            for (BasicBlock::iterator instItor = blockItor->begin() ; instItor != blockItor->end() ; ++instItor) {
                 instTable.insert(make_pair(instItor, instNo));
                 
                 errs() << "%" << instNo++ << ":\t" << instItor->getOpcodeName() << " ";
                 int ops = instItor->getNumOperands();
-                for(int j=0 ; j<ops ; ++j)
-                {
+                for(int j=0 ; j<ops ; ++j) {
                     //Check if operand is instruction operand
                     std::map<Instruction*,int>::iterator it;
                     
-                    if((it=instTable.find(reinterpret_cast<Instruction*>(instItor->getOperand(j)))) != instTable.end())
-                    {
+                    if((it=instTable.find(reinterpret_cast<Instruction*>(instItor->getOperand(j)))) != instTable.end()) {
                         errs() << "%" << it->second << " ";
                     }
                     
                     //check if operand is named operand
-                    else if(instItor->getOperand(j)->hasName())
-                    {
+                    else if(instItor->getOperand(j)->hasName()) {
                         errs() << instItor->getOperand(j)->getName() << " ";
                     }
                     //check if operand is unnamed operand
-                    else
-                    {
+                    else {
                         // check for const int
                         ConstantInt *i = dyn_cast<ConstantInt>(instItor->getOperand(j));
                         if(i)
@@ -48,7 +42,6 @@ namespace cs565 {
                             errs() << "XXX ";
                     }
                 }
-
                 errs() << "\n";
             }
         }

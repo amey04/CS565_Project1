@@ -18,4 +18,11 @@ namespace cs565 {
 		
 		virtual bool runOnFunction(Function &F);
 	};
+    
+    struct LiveVarAnalysis : public FunctionPass {
+        static char ID;
+        LiveVarAnalysis() : FunctionPass(ID) {}
+
+        virtual bool runOnFunction(Function &F);
+    };
 }
