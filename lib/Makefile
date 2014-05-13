@@ -17,6 +17,7 @@ TEST_PRINT = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) 
 TEST_NAIVE = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -cfgNaive < 
 TEST_LIVE = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -liveVarAnalysis <
 TEST_CFG = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -view-cfg <
+MEM_TO_REG = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -mem2reg <
 
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
@@ -30,8 +31,8 @@ testNaive:
 	$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
 
 testLive:
-	$(TEST_CFG) ../tests/test5.bc > /dev/null
-	$(TEST_PRINT) ../tests/test5.bc > /dev/null
-	$(TEST_LIVE) ../tests/test5.bc > /dev/null >> output
+	$(TEST_NAIVE) ../tests/test2.bc > ../tests/test2.opt.bc
+	$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
+	$(TEST_LIVE) ../tests/test2.opt.bc > /dev/null
 tar:
 	tar cvf Project1_LLvm.tar Makefile *.cpp *.h
