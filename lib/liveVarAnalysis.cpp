@@ -12,7 +12,8 @@
 #include "llvm/IR/InstIterator.h"
 
 #define MAX_BLOCKS 30
-#define DEBUG1
+#define DISPLAY
+
 namespace cs565 {
     /*
      * Use DenseMap instead of std::map as we are mapping instruction pointer and int
@@ -20,15 +21,6 @@ namespace cs565 {
      * http://llvm.org/docs/ProgrammersManual.html#map-like-containers-std-map-densemap-etc
      */
     DenseMap<const Instruction*, int> instructionMap;
-    
-    /*
-     * Create a map for individual instruction. Assign unique integer to each instruction
-     */
-    void createMap(Function &F) {
-        int id = 1;
-        for (inst_iterator i = inst_begin(F); i !=  inst_end(F); ++i)
-            instructionMap.insert(std::make_pair(&*i, id++));
-    }
     
     /*
      * GEN:  set of upward exposed uses.
@@ -49,7 +41,7 @@ namespace cs565 {
                             s.gen.insert(op);
                     }
                 }
-                // Add all instructions of BB to KILL set
+                // Add all instructions of BB to KILL set (this will include all pseude-registers)
                 s.kill.insert(&*i);
             }
             genKillBB.insert(std::make_pair(&*b, s));
@@ -57,120 +49,69 @@ namespace cs565 {
     }
     
     /*
-     * Implementing worklist data flow algorithm of live variable analsis
+     * Implementing worklist data flow algorithm of live variable analysis
      */
-    void calculateInOutSet(Function &F, DenseMap<const BasicBlock*, genKillSet> &genKillBB,
-                           DenseMap<const BasicBlock*, inOutSet> &inOutBB)
+    void calculateInOutSet(Function &F, DenseMap<const BasicBlock*, inOutSet> &inOutBB, DenseMap<const BasicBlock*, genKillSet> &genKillBB)
     {
-        SmallVector<BasicBlock*, 32> workList;
-        int cnt=0;
+        SmallVector<BasicBlock*, MAX_BLOCKS> workList; //use SmallVector as it provides pop_with_val function unlike std::vector
         int iteration = 1;
+        
+        // Add BBs with no successors to worklist
         for (Function::iterator b = F.begin() ; b != F.end(); ++b){
-            int numSucc = 0;
+            int num = 0;
             for (succ_iterator si = succ_begin(&*b) ; si != succ_end(&*b) ; ++si)
-                numSucc++;
-            if(numSucc==0)
+                num++;
+            if(num == 0)
                 workList.push_back(&*b);
         }
         
         while (!workList.empty()) {
             BasicBlock *b = workList.pop_back_val();
-            cnt = 0;
-#ifdef D
-            errs() << "\nBB: " << b->getName();
-#endif
-            for (succ_iterator si = succ_begin(&*b) ; si != succ_end(&*b) ; ++si) {
-                cnt++;
-#ifdef D
-                errs() << "\nSucc: " <<  si->getName();
-#endif
-            }
             inOutSet ios = inOutBB.lookup(b);
             
-            bool shouldAddPred = !inOutBB.count(b);
             genKillSet b_genKill = genKillBB.lookup(b);
 
-#ifdef DEBUG
-            errs() << "\n**BB**: "<< b->getName() << " Size: " << cnt << "::  ";
-            errs() << "\nIN: ";
-            for(std::set<const Instruction*>::iterator it = ios.in.begin() ; it != ios.in.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            errs() << "\nOUT: ";
-            for(std::set<const Instruction*>::iterator it = ios.out.begin() ; it != ios.out.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            
-            errs() << "\nGEN: ";
-            for(std::set<const Instruction*>::iterator it = b_genKill.gen.begin() ; it != b_genKill.gen.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            errs() << "\nKILL: ";
-            for(std::set<const Instruction*>::iterator it = b_genKill.kill.begin() ; it != b_genKill.kill.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-#endif
-            // Take the union of all successors
-            std::set<const Instruction*> a;
+            // Take the union of IN sets of all successors of current basic block
+            std::set<const Instruction*> uni;
             for (succ_iterator SI = succ_begin(b), E = succ_end(b); SI != E; ++SI) {
                 std::set<const Instruction*> s(inOutBB.lookup(*SI).in);
-                a.insert(s.begin(), s.end());
-                
-#ifdef DEBUG
-                errs() << "\nSucc: " << SI->getName() << " IN: ";
-                for(std::set<const Instruction*>::iterator it = s.begin() ; it != s.end() ; ++it) {
-                    errs() << instructionMap.lookup(*it) << " ";
-                }
-                for(std::set<const Instruction*>::iterator it = a.begin() ; it != a.end() ; ++it) {
-                    errs() << instructionMap.lookup(*it) << " ";
-                }
-#endif
+                uni.insert(s.begin(), s.end());
             }
-            /*if(cnt == 0) {
-                ios.in = b_genKill.gen;
-            }*/
-            if (a != ios.out){
-                shouldAddPred = true;
-                ios.out = a;
-                // before = after - KILL + GEN
+
+            bool addToWorklist = !inOutBB.count(b);
+            if (uni != ios.out){
+                addToWorklist = true;
+                ios.out = uni;
+                // IN = GEN + (OUT - KILL)
                 ios.in.clear();
                 ios.in.insert(b_genKill.gen.begin(), b_genKill.gen.end());
                 
-                std::set_difference(a.begin(), a.end(), b_genKill.kill.begin(), b_genKill.kill.end(),
+                //<codeblock provided in LLVM docs>
+                std::set_difference(uni.begin(), uni.end(), b_genKill.kill.begin(), b_genKill.kill.end(),
                                     std::inserter(ios.in, ios.in.end()));
-                
+                //</codeblock>
             }
-            else if(a.size() == 0) {
+            else if(uni.size() == 0) {
                 ios.in = b_genKill.gen;
-                shouldAddPred = true;
+                addToWorklist = true;
             }
             
             inOutBB.erase(b);
             inOutBB.insert(std::make_pair(b, ios));
         
-            
-            if (shouldAddPred)
-                for (pred_iterator PI = pred_begin(b), E = pred_end(b); PI != E; ++PI) {
-                    workList.push_back(*PI);
+            // if OUT set of BB is changed need to recompute IN and OUT of all pred
+            if (addToWorklist) {
+                for (pred_iterator pi = pred_begin(b) ; pi != pred_end(b); ++pi) {
+                    workList.push_back(*pi);
                 }
-#ifdef DEBUG1
-            errs() << "\n\nIteration " << iteration++;
-            /*errs() << "\nBasic Block: "<< b->getName() << " Size: " << cnt << "::  ";
-            errs() << "\nIN: ";
-            for(std::set<const Instruction*>::iterator it = ios.in.begin() ; it != ios.in.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
             }
-            errs() << "\nOUT: ";
-            for(std::set<const Instruction*>::iterator it = ios.out.begin() ; it != ios.out.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }*/
             
-
-            
-            errs() << "\nBasic Block\t\tIN\t\tOUT\n";
+#ifdef DISPLAY
+            errs() << "\n\nIteration " << iteration++;
+            errs() << "\nBasic Block\tIN\t\tOUT\n";
             for (Function::iterator i = F.begin(); i != F.end(); ++i) {
                 inOutSet s = inOutBB.lookup(&*i);
-                errs() << "BB " << i->getName() << ":\t\t( ";
+                errs() << i->getName() << ":\t\t( ";
                 
                 for(std::set<const Instruction*>::iterator it = s.in.begin() ; it != s.in.end() ; ++it) {
                     errs() << instructionMap.lookup(*it) << " ";
@@ -218,6 +159,15 @@ namespace cs565 {
         }
     }
     
+    /*
+     * Create a map for individual instruction. Assign unique integer to each instruction
+     */
+    void createMap(Function &F) {
+        int id = 1;
+        for (inst_iterator i = inst_begin(F); i !=  inst_end(F); ++i)
+            instructionMap.insert(std::make_pair(&*i, id++));
+    }
+    
 	bool LiveVarAnalysis::runOnFunction(Function &F) {
         
         // Create instruction map for this function.
@@ -226,11 +176,13 @@ namespace cs565 {
         DenseMap<const BasicBlock*, genKillSet> genKillBB;
         // Calculate basic block's GEN and KILL sets.
         calculateGenKillSet(F, genKillBB);
-        
-        errs() << "\nBasic Block\t\tGEN\t\tKILL\n";
+  
+#ifdef DISPLAY
+        errs() << "\n\nGEN and KILL sets of Basic Blocks";
+        errs() << "\nBasic Block\tGEN\t\tKILL\n";
         for (Function::iterator i = F.begin(); i != F.end(); ++i) {
             genKillSet s = genKillBB.lookup(&*i);
-            errs() << "BB " << i->getName() << ":\t\t( ";
+            errs() << i->getName() << ":\t\t( ";
             
             for(std::set<const Instruction*>::iterator it = s.gen.begin() ; it != s.gen.end() ; ++it) {
                 errs() << instructionMap.lookup(*it) << " ";
@@ -239,54 +191,21 @@ namespace cs565 {
             for(std::set<const Instruction*>::iterator it = s.kill.begin() ; it != s.kill.end() ; ++it) {
                 errs() << instructionMap.lookup(*it) << " ";
             }
-            
             errs() << ")\n";
-
         }
+#endif
+        
         DenseMap<const BasicBlock*, inOutSet> inOutBB;
         // Calculate basic block's IN and OUT sets.
-        
-        calculateInOutSet(F, genKillBB, inOutBB);
+        errs() << "\nIterative data-flow algorithm";
+        calculateInOutSet(F, inOutBB, genKillBB);
         
         DenseMap<const Instruction*, inOutSet> inOutInst;
         // Calculate instruction's IN and OUT sets.
         calculateInstructionInOutSet(F, inOutBB, inOutInst);
-
-        /*errs() << "\nBasic Block\t\tIN\t\tOUT\n";
-        for (Function::iterator i = F.begin(); i != F.end(); ++i) {
-            inOutSet s = inOutBB.lookup(&*i);
-            errs() << "BB " << i->getName() << ":\t\t( ";
-            
-            for(std::set<const Instruction*>::iterator it = s.in.begin() ; it != s.in.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            errs() << ")\t\t( ";
-            for(std::set<const Instruction*>::iterator it = s.out.begin() ; it != s.out.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            
-            errs() << ")\n";
-        }
         
-        errs() << "\nBasic Block\t\tGEN\t\tKILL\n";
-        for (Function::iterator i = F.begin(); i != F.end(); ++i) {
-            genKillSet s = genKillBB.lookup(&*i);
-            errs() << "BB " << i->getName() << ":\t\t( ";
-            
-            for(std::set<const Instruction*>::iterator it = s.gen.begin() ; it != s.gen.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            errs() << ")\t\t( ";
-            for(std::set<const Instruction*>::iterator it = s.kill.begin() ; it != s.kill.end() ; ++it) {
-                errs() << instructionMap.lookup(*it) << " ";
-            }
-            
-            errs() << ")\n";
-        }*/
-
-        
-
-        errs() << "\n\nIN and OUT sets for instruction";
+#ifdef DISPLAY
+        errs() << "\n\nIN and OUT sets for individual instruction";
         errs() << "\nInstruction\tIN\t\tOUT\n";
         for (inst_iterator i = inst_begin(F), E = inst_end(F); i != E; ++i) {
             inOutSet s = inOutInst.lookup(&*i);
@@ -303,7 +222,7 @@ namespace cs565 {
 
             errs() << ")\n";
         }
-
+#endif
         return false; // No modifications to IR
     }
 }

@@ -3,7 +3,6 @@
 #include "llvm/IR/Instruction.h"
 
 #include <set>
-#include <iostream>
 
 using namespace llvm;
 
@@ -30,15 +29,9 @@ namespace cs565 {
         virtual bool runOnFunction(Function &F);
 
     };
-    struct LiveVar : public FunctionPass {
-        static char ID;
-        LiveVar() : FunctionPass(ID) {}
-        
-        virtual bool runOnFunction(Function &F);
-        
-    };
+    
     /*
-     * structure to hold GEN and KILL sets
+     * class to hold GEN and KILL sets
      */
     class genKillSet {
     public:
@@ -51,14 +44,13 @@ namespace cs565 {
     };
     
     /*
-     * Struct to hold IN and OUT sets
+     * class to hold IN and OUT sets
      */
     class inOutSet {
     public:
         std::set<const Instruction*> in;
         std::set<const Instruction*> out;
         inOutSet() {
-            std::cout << "Constructor: inoutset\n";
             in.clear();
             out.clear();
         }

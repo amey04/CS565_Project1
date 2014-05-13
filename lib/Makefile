@@ -16,8 +16,6 @@ LIB_EXT = .dylib
 TEST_PRINT = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -prettyPrint <
 TEST_NAIVE = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -cfgNaive < 
 TEST_LIVE = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -liveVarAnalysis <
-TEST_CFG = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -view-cfg <
-MEM_TO_REG = $(LEVEL)/../bin/opt -load $(LEVEL)/../lib/$(LIBRARYNAME)$(LIB_EXT) -mem2reg <
 
 # Include the makefile implementation stuff
 include $(LEVEL)/Makefile.common
@@ -35,4 +33,4 @@ testLive:
 	$(TEST_PRINT) ../tests/test2.opt.bc > /dev/null
 	$(TEST_LIVE) ../tests/test2.opt.bc > /dev/null
 tar:
-	tar cvf Project1_LLvm.tar Makefile *.cpp *.h
+	tar cvf Project2_LLvm.tar Makefile *.cpp *.h
